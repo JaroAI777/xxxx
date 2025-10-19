@@ -91,7 +91,16 @@
 
     /* **Kluczowe**: host widżetu dosuwany pod nagłówek na mobilu, bez ingerencji w atrybuty */
     elevenlabs-convai{ display:block; margin-top: var(--widget-offset-top, 0px); }
-  </style>
+    /* Skalowanie mobilne — mniejsze logo wyłącznie na telefonach */
+  @media (max-width: 640px){
+    :root{ --header-h: 56px; }
+    header .logo{ height: calc(var(--header-h) - 10px); max-height: 44px; }
+  }
+  @media (max-width: 380px){
+    :root{ --header-h: 52px; }
+    header .logo{ max-height: 40px; }
+  }
+</style>
 </head>
 <body>
   <header aria-label="Górny baner z logo">
