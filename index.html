@@ -11,6 +11,9 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="WORK IN PROGRESS — DialogAI" />
 
+  <!-- Ustala bazę URL dla projektu Pages: wszystkie ścieżki względne liczone od /xxxx/ -->
+  <base href="https://jaroai777.github.io/xxxx/">
+
   <!-- Nagłówek: nowoczesna, techniczna typografia -->
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
@@ -100,19 +103,15 @@
     :root{ --header-h: 52px; }
     header .logo{ max-height: 40px; }
   }
-</style>
+  </style>
 
-  <!-- Favicon — Wariant A (plikowe). Umieść pliki w tym samym katalogu co index.html -->
-  <!-- Relatywne ścieżki (Project Pages: /xxxx/...) -->
-  <link rel="icon" href="./favicon.ico?v=9" type="image/x-icon" sizes="any">
-  <link rel="shortcut icon" href="./favicon.ico?v=9" type="image/x-icon">
-  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=9">
-  <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=9">
-  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=9">
-  <link rel="manifest" href="./site.webmanifest?v=9">
-  <!-- Bezpośrednie (absolutne) ścieżki – dla przeglądarek ignorujących relatywne wpisy -->
-  <link rel="icon" href="https://jaroai777.github.io/xxxx/favicon.ico?v=9" type="image/x-icon">
-  <link rel="icon" type="image/png" sizes="32x32" href="https://jaroai777.github.io/xxxx/favicon-32.png?v=9">
+  <!-- Favicon — bezwzględne ścieżki Project Pages (pewne dla https://jaroai777.github.io/xxxx/) -->
+  <link rel="icon" href="/xxxx/favicon.ico?v=11" type="image/x-icon" sizes="any">
+  <link rel="shortcut icon" href="/xxxx/favicon.ico?v=11" type="image/x-icon">
+  <link rel="icon" type="image/png" sizes="32x32" href="/xxxx/favicon-32.png?v=11">
+  <link rel="icon" type="image/png" sizes="16x16" href="/xxxx/favicon-16.png?v=11">
+  <link rel="apple-touch-icon" sizes="180x180" href="/xxxx/apple-touch-icon.png?v=11">
+  <link rel="manifest" href="/xxxx/site.webmanifest?v=11">
   <meta name="theme-color" content="#3558e6" />
 </head>
 <body>
@@ -131,7 +130,8 @@
   </main>
 
   <!-- Widżet ElevenLabs — bez dodatkowych atrybutów -->
-  <elevenlabs-convai agent-id="agent_7401k7wfem7mef4s6sxve96pebep"></elevenlabs-convai><script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+  <elevenlabs-convai agent-id="agent_7401k7wfem7mef4s6sxve96pebep"></elevenlabs-convai>
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
   <!-- FX + logika: galaktyki, WIP po kliknięciu znika i wraca po zminimalizowaniu; mobile dosunięcie widżetu -->
   <script>
@@ -155,15 +155,35 @@
 
       function largestVisibleRect(root){ let max=0, rect=null; const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT); while(walker.nextNode()){ const el = walker.currentNode; const cs = getComputedStyle(el); if(cs.visibility==='hidden' || cs.display==='none' || cs.opacity==='0') continue; const r = el.getBoundingClientRect(); if(r.width<=0 || r.height<=0) continue; if((cs.position==='fixed' || cs.position==='absolute' || cs.position==='sticky') && r.width*r.height>max){ max=r.width*r.height; rect=r; } } return rect; }
       function getState(widget){
-        try{ const sr = widget.shadowRoot; if(sr){ const big = largestVisibleRect(sr); const hasInput = sr.querySelector('textarea, input[type="text"], input[role="textbox"]'); if(big){ const area = big.width*big.height; const expanded = area > 90000 || (area>60000 i !!hasInput); const minimized = area < 40000; return { expanded, minimized }; } } }catch(e){}
-        const r = widget.getBoundingClientRect(); return { expanded: (r.width>260 || r.height>320), minimized: (r.width<=180 && r.height<=180) };
+        try{
+          const sr = widget.shadowRoot;
+          if(sr){
+            const big = (function largestVisibleRect(root){
+              let max=0, rect=null; const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+              while(walker.nextNode()){
+                const el = walker.currentNode; const cs = getComputedStyle(el);
+                if(cs.visibility==='hidden' || cs.display==='none' || cs.opacity==='0') continue;
+                const r = el.getBoundingClientRect(); if(r.width<=0 || r.height<=0) continue;
+                if((cs.position==='fixed' || cs.position==='absolute' || cs.position==='sticky') && r.width*r.height>max){ max=r.width*r.height; rect=r; }
+              } return rect;
+            })(sr);
+            const hasInput = sr.querySelector('textarea, input[type="text"], input[role="textbox"]');
+            if(big){
+              const area = big.width*big.height;
+              const expanded = area > 90000 || (area>60000 && !!hasInput);
+              const minimized = area < 40000;
+              return { expanded, minimized };
+            }
+          }
+        }catch(e){}
+        const r = widget.getBoundingClientRect();
+        return { expanded: (r.width>260 || r.height>320), minimized: (r.width<=180 && r.height<=180) };
       }
       function evaluate(widget){
         const {expanded, minimized} = getState(widget);
         if(!userInteracted) return;
         if(expanded){
           removeWip();
-          // **Mobil**: dociśnij host widżetu poniżej nagłówka przez CSS var, bez zmian atrybutów
           if(matchMedia('(max-width: 640px)').matches){
             document.documentElement.style.setProperty('--widget-offset-top', getComputedStyle(document.documentElement).getPropertyValue('--header-h') || '64px');
           }
@@ -174,12 +194,27 @@
           }
         }
       }
-      function bindWidget(){ const widget = document.querySelector('elevenlabs-convai'); if(!widget) return false; document.addEventListener('pointerdown', (ev)=>{ const path = ev.composedPath ? ev.composedPath() : (ev.path||[]); if(path.includes(widget)){ userInteracted = true; setTimeout(()=> evaluate(widget), 150); setTimeout(()=> evaluate(widget), 450); } }, true); const ro = new ResizeObserver(()=> evaluate(widget)); ro.observe(widget); const mo1 = new MutationObserver(()=> evaluate(widget)); mo1.observe(widget, { attributes:true, subtree:true, childList:true }); try{ if(widget.shadowRoot){ const mo2 = new MutationObserver(()=> evaluate(widget)); mo2.observe(widget.shadowRoot, { attributes:true, subtree:true, childList:true }); } }catch(e){} setInterval(()=> evaluate(widget), 350); restoreWip(); return true; }
-      if(!bindWidget()){ const id = setInterval(()=>{ if(bindWidget()) clearInterval(id); }, 400); setTimeout(()=> clearInterval(id), 12000); }
+      function bindWidget(){
+        const widget = document.querySelector('elevenlabs-convai'); if(!widget) return false;
+        document.addEventListener('pointerdown', (ev)=>{
+          const path = ev.composedPath ? ev.composedPath() : (ev.path||[]);
+          if(path.includes(widget)){ userInteracted = true; setTimeout(()=> evaluate(widget), 150); setTimeout(()=> evaluate(widget), 450); }
+        }, true);
+        const ro = new ResizeObserver(()=> evaluate(widget)); ro.observe(widget);
+        const mo1 = new MutationObserver(()=> evaluate(widget)); mo1.observe(widget, { attributes:true, subtree:true, childList:true });
+        try{ if(widget.shadowRoot){ const mo2 = new MutationObserver(()=> evaluate(widget)); mo2.observe(widget.shadowRoot, { attributes:true, subtree:true, childList:true }); } }catch(e){}
+        setInterval(()=> evaluate(widget), 350);
+        restoreWip(); return true;
+      }
+      if(!bindWidget()){
+        const id = setInterval(()=>{ if(bindWidget()) clearInterval(id); }, 400);
+        setTimeout(()=> clearInterval(id), 12000);
+      }
     })();
   </script>
 
   <noscript>Wymagany jest JavaScript, aby wyświetlić animację i widżet ElevenLabs.</noscript>
+
   <script>
     function fallbackLogo(){
       const svgNS='http://www.w3.org/2000/svg';
@@ -187,13 +222,11 @@
       svg.setAttribute('viewBox','0 0 256 256');
       svg.setAttribute('aria-label','DialogAI — logo (zapasowe)');
       svg.setAttribute('class','logo');
-      // dymek
       const g=document.createElementNS(svgNS,'g');
       const path=document.createElementNS(svgNS,'path');
       path.setAttribute('fill','var(--brand)');
       path.setAttribute('d','M48 48h144c13.3 0 24 10.7 24 24v80c0 13.3-10.7 24-24 24H108l-28 28v-28H48c-13.3 0-24-10.7-24-24V72c0-13.3 10.7-24 24-24z');
       g.appendChild(path);
-      // robot
       const face=document.createElementNS(svgNS,'rect');
       face.setAttribute('x','84'); face.setAttribute('y','92'); face.setAttribute('width','88'); face.setAttribute('height','56'); face.setAttribute('rx','12'); face.setAttribute('fill','#ffffff');
       const eyeL=document.createElementNS(svgNS,'circle'); eyeL.setAttribute('cx','110'); eyeL.setAttribute('cy','120'); eyeL.setAttribute('r','8'); eyeL.setAttribute('fill','var(--brand)');
@@ -206,4 +239,3 @@
   </script>
 </body>
 </html>
-
